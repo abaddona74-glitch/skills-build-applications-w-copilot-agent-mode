@@ -17,6 +17,8 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from octofit_tracker.views import UserViewSet, TeamViewSet, ActivityViewSet, WorkoutViewSet, LeaderboardViewSet, api_root
+import os
+from django.http import JsonResponse
 from django.views.generic import RedirectView
 
 router = routers.DefaultRouter()
@@ -25,9 +27,20 @@ router.register(r'teams', TeamViewSet)
 router.register(r'activities', ActivityViewSet)
 router.register(r'workouts', WorkoutViewSet)
 router.register(r'leaderboard', LeaderboardViewSet)
+
+# Custom endpoint to return the full API URL using CODESPACE_NAME
+def api_url_info(request):
+    codespace = os.environ.get('CODESPACE_NAME', None)
+    if codespace:
+        url = f"https://{codespace}-8000.app.github.dev/api/"
+    else:
+        url = request.build_absolute_uri('/api/')
+    return JsonResponse({"api_url": url})
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', api_root, name='api-root'),
     path('api/', include(router.urls)),
+    path('api-url/', api_url_info, name='api-url-info'),
     path('', RedirectView.as_view(url='/api/', permanent=False)),
 ]
